@@ -1,0 +1,1 @@
+SIC_DEFAULT_WORKING_DIRECTORY = "C:\\Users\\Chris Jackson\\PycharmProjects\\SIC_System_Software\\Assembly Code\\"
