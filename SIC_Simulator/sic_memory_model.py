@@ -46,6 +46,6 @@ def dump_memory(memory_model_dict):
 
 
 # TEST BED
-memory_model_dict = initialize_memory()
-
-dump_memory(memory_model_dict)
+# memory_model_dict = initialize_memory()
+#
+# dump_memory(memory_model_dict)

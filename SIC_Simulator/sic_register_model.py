@@ -9,9 +9,16 @@ class RegisterContentsError(Exception):
 
 
 class SICRegisterModel:
-    def __init__(self):
-        self.hex_string = "------"
-        self.bin_string = "------------------------"
+    def __init__(self, register_name):
+        self.register_name = register_name
+        self.hex_string = "FFFFFF"
+        self.bin_string = "111111111111111111111111"
+
+    def get_register_name(self):
+        return self.register_name
+
+    def get_formatted_register_name(self):
+        return self.register_name.rjust(2)
 
     def hex_to_bin(self, hex_string):
         bin_string = ""
@@ -19,13 +26,12 @@ class SICRegisterModel:
         for hex_digit in hex_string:
             bin_string += HEX_TO_BIN_DICT[hex_digit]
 
-        print("bin_string:", bin_string)
-
         return bin_string
 
     def set_hex_string(self, hex_string):
         # Make sure hex_string contains all capital characters
-        hex_string = hex_string.upper()
+        # and pad it with leading zeros if necessary
+        hex_string = hex_string.upper().rjust(NUMBER_OF_HEX_DIGITS, "0")
 
         # Error check for length and hex digits
         error_found = False
@@ -48,6 +54,16 @@ class SICRegisterModel:
     def get_hex_string(self):
         return self.hex_string
 
+    def get_formatted_hex_string(self):
+        formatted_hex_string = ""
+        for index in range(len(self.hex_string)):
+            if index % 2 == 0:
+                formatted_hex_string += " " + self.hex_string[index]
+            else:
+                formatted_hex_string += self.hex_string[index]
+
+        return formatted_hex_string.strip()
+
     def bin_to_hex(self, bin_string):
         hex_string = ""
         # Register holds 24 bits
@@ -58,6 +74,9 @@ class SICRegisterModel:
         return hex_string
 
     def set_bin_string(self, bin_string):
+        # Pad with leading zeros if necessary
+        bin_string = bin_string.rjust(NUMBER_OF_BIN_DIGITS, "0")
+
         # Error check for length and hex digits
         error_found = False
         if len(bin_string) != NUMBER_OF_BIN_DIGITS:
@@ -80,19 +99,57 @@ class SICRegisterModel:
     def get_bin_string(self):
         return self.bin_string
 
+    def get_formatted_bin_string(self):
+        formatted_bin_string = ""
+        for index in range(len(self.bin_string)):
+            if index % 8 == 0:
+                formatted_bin_string += "  " + self.bin_string[index]
+            elif index % 4 == 0:
+                formatted_bin_string += " " + self.bin_string[index]
+            else:
+                formatted_bin_string += self.bin_string[index]
+
+        return formatted_bin_string.strip()
+
+
+REGISTER_A = "A"
+REGISTER_X = "X"
+REGISTER_L = "L"
+REGISTER_PC = "PC"
+REGISTER_SW = "SW"
+
+REGISTER_DICT = {REGISTER_A: SICRegisterModel(REGISTER_A),
+                 REGISTER_X: SICRegisterModel(REGISTER_X),
+                 REGISTER_L: SICRegisterModel(REGISTER_L),
+                 REGISTER_PC: SICRegisterModel(REGISTER_PC),
+                 REGISTER_SW: SICRegisterModel(REGISTER_SW)}
+
+
+def dump_registers():
+    output_string = ""
+
+    for register_name, register in REGISTER_DICT.items():
+        output_string += ("REGISTER " + register.get_formatted_register_name() +
+                          " :" +
+                          "   HEX [" + register.get_formatted_hex_string() + "]" +
+                          "   BIN [" + register.get_formatted_bin_string() + "]\n")
+
+    print(output_string)
+
+
 
 # TEST BED
-register_a = SICRegisterModel()
-# register_a.set_hex_string("01FDeK")
-register_a.set_bin_string("111111111000000011111111")
-# register_a.hex_to_bin(register_a.bin_to_hex("001110111111110000011110"))
-# register_a.hex_to_bin("01DEF3")
-print("bin:", register_a.get_bin_string())
-print("hex:", register_a.get_hex_string())
-register_a.set_hex_string("f180ff")
-print("bin:", register_a.get_bin_string())
-print("hex:", register_a.get_hex_string())
-register_x = SICRegisterModel()
-register_l = SICRegisterModel()
-register_pc = SICRegisterModel()
-register_sw = SICRegisterModel()
+# register_a = SICRegisterModel()
+# # register_a.set_hex_string("01FDeK")
+# register_a.set_bin_string("111111111000000011111111")
+# # register_a.hex_to_bin(register_a.bin_to_hex("001110111111110000011110"))
+# # register_a.hex_to_bin("01DEF3")
+# print("bin:", register_a.get_bin_string())
+# print("hex:", register_a.get_hex_string())
+# register_a.set_hex_string("f180ff")
+# print("bin:", register_a.get_bin_string())
+# print("hex:", register_a.get_hex_string())
+# register_x = SICRegisterModel()
+# register_l = SICRegisterModel()
+# register_pc = SICRegisterModel()
+# register_sw = SICRegisterModel()

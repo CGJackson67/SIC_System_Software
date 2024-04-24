@@ -1,10 +1,12 @@
 import os
 import sys
 
-from SIC_Simulator.sic_assembly_listing_parser import sic_assembly_listing_parser
+from SIC_Simulator.sic_assembly_listing_parser import sic_assembly_listing_parser, print_assembly_listing_line
 from SIC_Simulator.sic_configuration import SIC_DEFAULT_WORKING_DIRECTORY
-from SIC_Simulator.sic_memory_model import dump_memory, initialize_memory
+from SIC_Simulator.sic_loader import load_program_object_code
+from SIC_Simulator.sic_memory_model import dump_memory
 from SIC_Simulator.sic_object_code_parser import sic_object_code_parser
+from SIC_Simulator.sic_register_model import REGISTER_DICT, dump_registers, REGISTER_PC
 from SIC_Utilities.sic_constants import SIC_OBJECT_CODE_FILE_EXTENSION, SIC_ASSEMBLY_LISTING_FILE_EXTENSION
 from SIC_Utilities.sic_messaging import print_status, print_error
 
@@ -21,7 +23,7 @@ class SICSimulatorError(Exception):
 
 # This function is used to verify the existence of
 # a program object file (*.obj) and its corresponding
-# assembly listing file.  If the files exist they are
+# assembly listing file.  If the files exist, they are
 # opened for reading
 def verify_and_open_program_files(program_file_name):
     program_file_dict = {}
@@ -71,22 +73,14 @@ def verify_and_open_program_files(program_file_name):
     return program_file_dict
 
 
-# This function will initialize the memory model and
-# then load program object code into the memory model
-def load_program_object_code(parsed_object_code_dict_list):
-    memory_model_dictionary = initialize_memory()
-
-    # Load object code into memory model
-
-    return memory_model_dictionary
-
-
 memory_model_dict = {}
 
 parsed_object_code_dict_list = []
-parsed_assembly_listing_dict_list = []
+parsed_assembly_listing_dict = {}
 
 mode = "LOAD"
+
+print("SIC SIMULATOR")
 
 while True:
     while mode == "LOAD":
@@ -104,14 +98,16 @@ while True:
 
                     # Parse object code and assembly listing files
                     parsed_object_code_dict_list = sic_object_code_parser(program_file_dict["object_code_file"])
-                    parsed_assembly_listing_dict_list = sic_assembly_listing_parser(
-                        program_file_dict["assembly_listing_file"])
+                    parsed_assembly_listing_dict = sic_assembly_listing_parser(program_file_dict["assembly_listing_file"])
 
                     # Initialize memory and load program into memory
                     memory_model_dict = load_program_object_code(parsed_object_code_dict_list)
 
-                    # Initialize registers
+                    # Initialize the program counter register
+                    header_record_dict = parsed_object_code_dict_list[0]
+                    REGISTER_DICT[REGISTER_PC].set_hex_string(header_record_dict["program_start_address"])
 
+                    # STATUS
                     print_status(program_file_name + " loaded and ready to run")
                     mode = "RUN"
                 except SICSimulatorError as ex:
@@ -130,7 +126,9 @@ while True:
 
         match command.upper():
             case "S":
-                mode = "LOAD"
+                print_assembly_listing_line(parsed_assembly_listing_dict, REGISTER_DICT[REGISTER_PC])
+                dump_registers()
+                # mode = "LOAD"
             case "D":
                 dump_memory(memory_model_dict)
             case "R":

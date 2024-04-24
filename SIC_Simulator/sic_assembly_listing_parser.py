@@ -11,18 +11,17 @@ class SICAssemblyListingParserError(Exception):
 
 # This function reads an assembly list file (*.lst).
 # It processes each line of code one at a time.
-# It parses out the memory address and stores it with
+# It parses out the memory address and stores it as the key with
 # the corresponding line of code in a line of code dictionary.
-# It returns a list containing all the parsed line of code
-# dictionaries.
+# It returns the populated line of code dictionary
 def sic_assembly_listing_parser(assembly_listing_file):
-    parsed_listing_dict_list = []
+    parsed_listing_dict = {}
 
     start_found = False
     end_found = False
 
     for line_of_listing in assembly_listing_file:
-        memory_address = line_of_listing[:4]
+        memory_address = line_of_listing[:4].rjust(6, "0")
         unparsed_line_of_listing = line_of_listing[:-1]
 
         # Check for empty line in assembly listing file
@@ -47,11 +46,9 @@ def sic_assembly_listing_parser(assembly_listing_file):
                 # Close assembly listing file, print status message, and exit program
                 assembly_listing_file.close()
 
-                return parsed_listing_dict_list
+                return parsed_listing_dict
             else:
-                parsed_listing_dict = {memory_address: unparsed_line_of_listing}
-
-                parsed_listing_dict_list.append(parsed_listing_dict)
+                parsed_listing_dict[memory_address] = unparsed_line_of_listing
 
     if not end_found:
         # Close assembly file and throw exception
@@ -59,6 +56,14 @@ def sic_assembly_listing_parser(assembly_listing_file):
 
         # ERROR
         raise SICAssemblyListingParserError("END was not found in assembly listing file")
+
+
+# This function prints a line of the assembly listing
+# referenced by the passed memory address argument
+# NOTE:  The memory address should always come from
+# the program counter register (PC)
+def print_assembly_listing_line(parsed_assembly_listing_dict, register_pc):
+    print(parsed_assembly_listing_dict[register_pc.get_hex_string()] + "\n")
 
 
 # TEST BED

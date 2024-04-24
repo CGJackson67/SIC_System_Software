@@ -147,7 +147,10 @@ def sic_object_code_parser(object_code_file):
 #                          object_code_file_name + "." +
 #                          SIC_OBJECT_CODE_FILE_EXTENSION)
 #
-# parsed_object_code_dict_list = sic_object_code_parser(object_code_file_path)
+# object_code_file = open(object_code_file_path, "rt")
+#
+#
+# parsed_object_code_dict_list = sic_object_code_parser(object_code_file)
 #
 # for line in parsed_object_code_dict_list:
 #     print(line)
