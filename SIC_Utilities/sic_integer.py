@@ -57,23 +57,23 @@ def bin_string_to_dec(bin_value_string: str):
 
 
 # TEST BED
-try:
-    dec_value = bin_string_to_dec("101010101010101010101010")
-    print("dec_value 1:", dec_value)
-    dec_value = bin_string_to_dec("101010101010101010101111")
-    print("dec_value 2:", dec_value)
-    dec_value = bin_string_to_dec("000000001100000000111110")
-    print("dec_value 3:", dec_value)
-    dec_value = bin_string_to_dec("000000000000000000111001")
-    print("dec_value 4:", dec_value)
-    # dec_value = integer_bin_string_to_dec("101010100101010")
-    # print("dec_value 5:", dec_value)
-    # dec_value = integer_bin_string_to_dec("101010101XXX101010101010")
-    # print("dec_value 6:", dec_value)
-    # dec_value = integer_bin_string_to_dec("0000000001111000000000111001")
-    # print("dec_value 7:", dec_value)
-except SICIntegerError:
-    print("A Very Bad Error Has Occurred")
+# try:
+#     dec_value = bin_string_to_dec("101010101010101010101010")
+#     print("dec_value 1:", dec_value)
+#     dec_value = bin_string_to_dec("101010101010101010101111")
+#     print("dec_value 2:", dec_value)
+#     dec_value = bin_string_to_dec("000000001100000000111110")
+#     print("dec_value 3:", dec_value)
+#     dec_value = bin_string_to_dec("000000000000000000111001")
+#     print("dec_value 4:", dec_value)
+#     # dec_value = integer_bin_string_to_dec("101010100101010")
+#     # print("dec_value 5:", dec_value)
+#     # dec_value = integer_bin_string_to_dec("101010101XXX101010101010")
+#     # print("dec_value 6:", dec_value)
+#     # dec_value = integer_bin_string_to_dec("0000000001111000000000111001")
+#     # print("dec_value 7:", dec_value)
+# except SICIntegerError:
+#     print("A Very Bad Error Has Occurred")
 
 
 # Exceptions: ValueError, IntegerOutOfRangeError
@@ -134,14 +134,14 @@ def dec_to_bin_string(dec_value: int):
     return binary_number_string
 
 # TEST BED
-try:
-    binary_value = dec_to_bin_string(-5592406)
-    print("binary_value:", binary_value)
-    binary_value = dec_to_bin_string(-5592401)
-    print("binary_value:", binary_value)
-    binary_value = dec_to_bin_string(49214)
-    print("binary_value:", binary_value)
-    binary_value = dec_to_bin_string(57)
-    print("binary_value:", binary_value)
-except SICIntegerError:
-    print("A Very Bad Error Has Occurred")
+# try:
+#     binary_value = dec_to_bin_string(-5592406)
+#     print("binary_value:", binary_value)
+#     binary_value = dec_to_bin_string(-5592401)
+#     print("binary_value:", binary_value)
+#     binary_value = dec_to_bin_string(49214)
+#     print("binary_value:", binary_value)
+#     binary_value = dec_to_bin_string(57)
+#     print("binary_value:", binary_value)
+# except SICIntegerError:
+#     print("A Very Bad Error Has Occurred")

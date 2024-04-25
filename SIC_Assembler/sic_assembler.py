@@ -362,16 +362,16 @@ def assembler_pass_two(parsed_code_dict_list, assembly_code_file_path):
                 # Create and write assembly listing line
                 assembly_listing_line = create_assembly_listing_line(line_of_code_dict)
                 assembly_listing_file.write(assembly_listing_line)
-                # Write the last text record to the object code file
-                object_code_file.write(create_object_code_text_record(object_code_text_record_header,
-                                                                      object_code_text_record_body))
+                # Write the last text record to the object code file if it exists
+                if object_code_text_record_header != "":
+                    object_code_file.write(create_object_code_text_record(object_code_text_record_header,
+                                                                          object_code_text_record_body))
                 # Create object code end record
                 object_code_end_record = ("E" +
                                           start_address_hex.rjust(6, "0") +
                                           "\n")
                 # Write end record to the object code file
                 object_code_file.write(object_code_end_record)
-                # No further processing required, continue the for loop
 
                 # No further processing required, close files and exit
                 object_code_file.close()
@@ -379,6 +379,8 @@ def assembler_pass_two(parsed_code_dict_list, assembly_code_file_path):
                 # STATUS
                 print_status("Object code file written and closed")
                 print_status("Assembly listing file written and closed")
+
+                sys.exit()
             case _:
                 # Create object for BYTE operand and add
                 # it to the line of code dictionary
@@ -422,11 +424,13 @@ def assembler_pass_two(parsed_code_dict_list, assembly_code_file_path):
 # TEST BED
 # Create path to assembly code file.
 # NOTE: File should be indicated at run time
-assembly_code_file_name = "ReadWrite.asm"
+# assembly_code_file_name = "ReadWrite.asm"
+# assembly_code_file_name = "Sum.asm"
+# assembly_code_file_name = "SumModified.asm"
 # assembly_code_file_name = "ReadWriteTEST01.asm"
 # assembly_code_file_name = "ReadWriteTEST02.asm"
-assembly_code_file_path = ("C:\\Users\\Chris Jackson\\PycharmProjects\\SIC_System_Software\\Assembly Code\\" +
-                           assembly_code_file_name)
+# assembly_code_file_path = ("C:\\Users\\Chris Jackson\\PycharmProjects\\SIC_System_Software\\Assembly Code\\" +
+#                            assembly_code_file_name)
 
 parsed_code_dict_list = parse_assembly_code_file(assembly_code_file_path)
 
