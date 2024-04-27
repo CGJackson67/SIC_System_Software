@@ -10,12 +10,6 @@ from SIC_Simulator.sic_register_model import REGISTER_DICT, dump_registers, REGI
 from SIC_Utilities.sic_constants import SIC_OBJECT_CODE_FILE_EXTENSION, SIC_ASSEMBLY_LISTING_FILE_EXTENSION
 from SIC_Utilities.sic_messaging import print_status, print_error
 
-LOAD_MENU = "(l)oad, (q)uit"
-RUN_MENU = "(s)tep, (d)ump, (r)un, (q)uit"
-SIC_PROMPT = "SIC> "
-QUIT_CONFIRM = "Are you sure you want to quit? (y)es, (n)o"
-UNRECOGNIZED_COMMAND = "Unrecognized command"
-
 
 class SICSimulatorError(Exception):
     pass
@@ -73,6 +67,16 @@ def verify_and_open_program_files(program_file_name):
     return program_file_dict
 
 
+##########################
+# SIC SIMULATOR RUNNABLE #
+##########################
+
+LOAD_MENU = "(l)oad, (q)uit"
+RUN_MENU = "(s)tep, (d)ump, (r)un, (q)uit"
+SIC_PROMPT = "SIC> "
+QUIT_CONFIRM = "Are you sure you want to quit? (y)es, (n)o"
+UNRECOGNIZED_COMMAND = "Unrecognized command"
+
 memory_model_dict = {}
 
 parsed_object_code_dict_list = []
@@ -98,7 +102,8 @@ while True:
 
                     # Parse object code and assembly listing files
                     parsed_object_code_dict_list = sic_object_code_parser(program_file_dict["object_code_file"])
-                    parsed_assembly_listing_dict = sic_assembly_listing_parser(program_file_dict["assembly_listing_file"])
+                    parsed_assembly_listing_dict = sic_assembly_listing_parser(
+                        program_file_dict["assembly_listing_file"])
 
                     # Initialize memory and load program into memory
                     memory_model_dict = load_program_object_code(parsed_object_code_dict_list)
