@@ -1,21 +1,13 @@
+import random
+
 from SIC_Simulator.sic_memory_model import SICMemoryModelError
 from SIC_Simulator.sic_register_model import REGISTER_DICT, REGISTER_A, REGISTER_PC, REGISTER_X, REGISTER_SW, REGISTER_L
 from SIC_Utilities import sic_integer
-from SIC_Utilities.sic_constants import HEX_TO_OPCODE_DICT, BYTES_IN_WORD, INITIALIZATION_CHARACTER, \
+from SIC_Utilities.sic_constants import HEX_TO_OPCODE_DICT, BYTES_IN_WORD, \
     FROM_INDEXED_ADDRESSING_DICT, MINIMUM_MEMORY_ADDRESS_DEC, MAXIMUM_MEMORY_ADDRESS_DEC, MINIMUM_INTEGER, \
-    MAXIMUM_INTEGER, SW_LESS_THAN, SW_EQUAL, SW_GREATER_THAN
-from SIC_Utilities.sic_converter import hex_string_to_dec, dec_to_hex_string
+    MAXIMUM_INTEGER, SW_LESS_THAN, SW_EQUAL, SW_GREATER_THAN, BITS_IN_WORD
+from SIC_Utilities.sic_converter import hex_string_to_dec, dec_to_hex_string, hex_word_to_bin_word
 from SIC_Utilities.sic_messaging import print_error, print_status
-
-
-# Memory and registers are initialized with dashes ('-')
-# as a visualization and debugging aid.  In actuality,
-# memory is meant to be initialized with all ones ('F').
-# Because of this dashes (where they exist) should be
-# converted to 'F' before operation are executed.
-# This function does that conversion
-def replace_initialized_state_character(hex_string):
-    return hex_string.replace("-", "F")
 
 
 # This function will test to see if a memory
@@ -146,10 +138,60 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             return continue_execution
         case "AND":
             # A <- (A) & (m..m+2)
-            pass
+            # Get the contents of register a as a binary string
+            register_a_bin_string = REGISTER_DICT[REGISTER_A].get_bin_string()
+
+            # Build the value held at the indicated memory location
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            # Convert hex string to bin string
+            word_bin_string = hex_word_to_bin_word(word_hex_string)
+
+            # Do the logical and
+            and_bin_string = ""
+
+            for index in range(BITS_IN_WORD):
+                if register_a_bin_string[index] == "1" and word_bin_string[index] == "1":
+                    and_bin_string += "1"
+                else:
+                    and_bin_string += "0"
+
+            # Put the result in register a
+            REGISTER_DICT[REGISTER_A].set_bin_string(and_bin_string)
+
+            continue_execution = True
+            return continue_execution
         case "COMP":
             # (A) : (m..m+2)
-            pass
+            # Get value held in register a
+            register_a_hex_string = REGISTER_DICT[REGISTER_A].get_hex_string()
+            register_a_dec_value = hex_string_to_dec(register_a_hex_string)
+
+            # Compare the value in register a
+            # with value at the memory address and set the
+            # Status Word register accordingly
+            try:
+                memory_value_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, 3)
+                memory_value_dec_value = sic_integer.hex_string_to_dec(memory_value_hex_string)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            if register_a_dec_value < memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_LESS_THAN)
+            elif register_a_dec_value == memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_EQUAL)
+            elif register_a_dec_value > memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_GREATER_THAN)
+
+            continue_execution = True
+            return continue_execution
         case "DIV":
             # A <- (A) / (m..m+2)
             register_a_hex_string = REGISTER_DICT[REGISTER_A].get_hex_string()
@@ -184,13 +226,28 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             return continue_execution
         case "J":
             # PC <- m
-            pass
+            REGISTER_DICT[REGISTER_PC].set_hex_string(memory_address_hex_string.rjust(6, "0"))
+
+            continue_execution = True
+            return continue_execution
         case "JEQ":
             # PC <- m if CC set to =
-            pass
+            status_word = REGISTER_DICT[REGISTER_SW].get_hex_string()
+
+            if status_word == SW_EQUAL:
+                REGISTER_DICT[REGISTER_PC].set_hex_string(memory_address_hex_string)
+
+            continue_execution = True
+            return continue_execution
         case "JGT":
             # PC <- m if CC set to >
-            pass
+            status_word = REGISTER_DICT[REGISTER_SW].get_hex_string()
+
+            if status_word == SW_GREATER_THAN:
+                REGISTER_DICT[REGISTER_PC].set_hex_string(memory_address_hex_string)
+
+            continue_execution = True
+            return continue_execution
         case "JLT":
             # PC <- m if CC set to <>>
             status_word = REGISTER_DICT[REGISTER_SW].get_hex_string()
@@ -202,7 +259,15 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             return continue_execution
         case "JSUB":
             # L <- (PC); PC <- m
-            pass
+            # Store the program counter in register l
+            pc_register_hex_string = REGISTER_DICT[REGISTER_PC].get_hex_string()
+            REGISTER_DICT[REGISTER_L].set_hex_string(pc_register_hex_string)
+
+            # Store the memory address in the program counter
+            REGISTER_DICT[REGISTER_PC].set_hex_string(memory_address_hex_string.rjust(6, "0"))
+
+            continue_execution = True
+            return continue_execution
         case "LDA":
             # A <- (m..m+2)
             # Build the value held at the indicated memory location
@@ -217,13 +282,38 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
 
             continue_execution = True
             return continue_execution
-            pass
         case "LDCH":
             # A[rightmost byte] <- (m)
-            pass
+            # All other bytes in register a remain unchanged
+            # Get the byte value at the indicated memory location
+            try:
+                byte_string = MEMORY_MODEL.get_byte(memory_address_dec_value)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            # Set the rightmost byte in register a
+            register_a_hex_string = REGISTER_DICT[REGISTER_A].get_hex_string()
+            register_a_hex_string = register_a_hex_string[:4] + byte_string
+            REGISTER_DICT[REGISTER_A].set_hex_string(register_a_hex_string)
+
+            continue_execution = True
+            return continue_execution
         case "LDL":
             # L <- (m..m+2)
-            pass
+            # Build the value held at the indicated memory location
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            REGISTER_DICT[REGISTER_L].set_hex_string(word_hex_string)
+
+            continue_execution = True
+            return continue_execution
         case "LDX":
             # X <- (m..m+2)
             # Build the value held at the indicated memory location
@@ -267,7 +357,34 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             return continue_execution
         case "OR":
             # A <- (A) | (m..m+2)
-            pass
+            # Get the contents of register a as a binary string
+            register_a_bin_string = REGISTER_DICT[REGISTER_A].get_bin_string()
+
+            # Build the value held at the indicated memory location
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            # Convert hex string to bin string
+            word_bin_string = hex_word_to_bin_word(word_hex_string)
+
+            # Do the logical and
+            and_bin_string = ""
+
+            for index in range(BITS_IN_WORD):
+                if register_a_bin_string[index] == "0" and word_bin_string[index] == "0":
+                    and_bin_string += "0"
+                else:
+                    and_bin_string += "1"
+
+            # Put the result in register a
+            REGISTER_DICT[REGISTER_A].set_bin_string(and_bin_string)
+
+            continue_execution = True
+            return continue_execution
         case "RD":
             # A[rightmost byte] <- data from device specified by (m)
             pass
@@ -293,7 +410,8 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             end_index = 2
             while index < BYTES_IN_WORD:
                 try:
-                    MEMORY_MODEL.set_byte(memory_address_dec_value + index, register_a_hex_string[start_index:end_index])
+                    MEMORY_MODEL.set_byte(memory_address_dec_value + index,
+                                          register_a_hex_string[start_index:end_index])
                 except SICMemoryModelError:
                     print_error("MEMORY FAULT: Halting program execution\n")
                     continue_execution = False
@@ -305,17 +423,80 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             continue_execution = True
             return continue_execution
         case "STCH":
-            # m <- (A)[rightmost byte}
-            pass
+            # m <- (A)[rightmost byte]
+            register_a_hex_string = REGISTER_DICT[REGISTER_A].get_hex_string()
+            byte_string = register_a_hex_string[4:]
+            try:
+                MEMORY_MODEL.set_byte(memory_address_dec_value, byte_string)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            continue_execution = True
+            return continue_execution
         case "STL":
             # m..m+2 <- (L)
-            pass
+            register_l_hex_string = REGISTER_DICT[REGISTER_L].get_hex_string()
+
+            index = 0
+            start_index = 0
+            end_index = 2
+            while index < BYTES_IN_WORD:
+                try:
+                    MEMORY_MODEL.set_byte(memory_address_dec_value + index,
+                                          register_l_hex_string[start_index:end_index])
+                except SICMemoryModelError:
+                    print_error("MEMORY FAULT: Halting program execution\n")
+                    continue_execution = False
+                    return continue_execution
+                index += 1
+                start_index += 2
+                end_index += 2
+
+            continue_execution = True
+            return continue_execution
         case "STSW":
             # m..m+2 <- (SW)
-            pass
+            register_sw_hex_string = REGISTER_DICT[REGISTER_SW].get_hex_string()
+
+            index = 0
+            start_index = 0
+            end_index = 2
+            while index < BYTES_IN_WORD:
+                try:
+                    MEMORY_MODEL.set_byte(memory_address_dec_value + index,
+                                          register_sw_hex_string[start_index:end_index])
+                except SICMemoryModelError:
+                    print_error("MEMORY FAULT: Halting program execution\n")
+                    continue_execution = False
+                    return continue_execution
+                index += 1
+                start_index += 2
+                end_index += 2
+
+            continue_execution = True
+            return continue_execution
         case "STX":
-            # m..m+2 <- (X)
-            pass
+            register_x_hex_string = REGISTER_DICT[REGISTER_SW].get_hex_string()
+
+            index = 0
+            start_index = 0
+            end_index = 2
+            while index < BYTES_IN_WORD:
+                try:
+                    MEMORY_MODEL.set_byte(memory_address_dec_value + index,
+                                          register_x_hex_string[start_index:end_index])
+                except SICMemoryModelError:
+                    print_error("MEMORY FAULT: Halting program execution\n")
+                    continue_execution = False
+                    return continue_execution
+                index += 1
+                start_index += 2
+                end_index += 2
+
+            continue_execution = True
+            return continue_execution
         case "SUB":
             # A <- (A) - (m..m+2)
             register_a_hex_string = REGISTER_DICT[REGISTER_A].get_hex_string()
@@ -345,7 +526,17 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             return continue_execution
         case "TD":
             # Test device specified by (m)
-            pass
+            # Simulate testing a device by randomly selecting
+            # READY (SW_LESS_THAN) or NOT READY (SW_EQUAL).
+            # Randomization weighted to favor NOT READY
+            test_device_response_list = [SW_EQUAL, SW_EQUAL, SW_LESS_THAN]
+
+            # Set Status Word to the test device response
+            test_device_response_hex_string = random.choice(test_device_response_list)
+            REGISTER_DICT[REGISTER_SW].set_hex_string(test_device_response_hex_string)
+
+            continue_execution = True
+            return continue_execution
         case "TIX":
             # X <- (X) + 1: (X) : (m..m+2)
             # Increment the value in the x register

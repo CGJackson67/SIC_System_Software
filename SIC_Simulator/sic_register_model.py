@@ -1,4 +1,4 @@
-from SIC_Utilities.sic_constants import HEX_TO_BIN_DICT, BIN_TO_HEX_DICT, INITIALIZATION_CHARACTER
+from SIC_Utilities.sic_constants import HEX_TO_BIN_DICT, BIN_TO_HEX_DICT, INITIALIZATION_CHARACTER, BITS_IN_WORD
 
 
 class SICRegisterContentsError(Exception):
@@ -73,7 +73,7 @@ class SICRegisterModel:
         hex_string = ""
         # Register holds 24 bits
         # range(START, STOP, STEP)
-        for index in range(0, 24, 4):
+        for index in range(0, BITS_IN_WORD, 4):
             hex_string += BIN_TO_HEX_DICT[bin_string[index:index + 4]]
 
         return hex_string
