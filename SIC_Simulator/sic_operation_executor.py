@@ -1,4 +1,5 @@
-from SIC_Simulator.sic_register_model import REGISTER_DICT, REGISTER_A, REGISTER_PC, REGISTER_X, REGISTER_SW
+from SIC_Simulator.sic_memory_model import SICMemoryModelError
+from SIC_Simulator.sic_register_model import REGISTER_DICT, REGISTER_A, REGISTER_PC, REGISTER_X, REGISTER_SW, REGISTER_L
 from SIC_Utilities import sic_integer
 from SIC_Utilities.sic_constants import HEX_TO_OPCODE_DICT, BYTES_IN_WORD, INITIALIZATION_CHARACTER, \
     FROM_INDEXED_ADDRESSING_DICT, MINIMUM_MEMORY_ADDRESS_DEC, MAXIMUM_MEMORY_ADDRESS_DEC, MINIMUM_INTEGER, \
@@ -19,7 +20,7 @@ def replace_initialized_state_character(hex_string):
 
 # This function will test to see if a memory
 # address is in the range of 0000 to 7FFF
-def test_for_memory_address_in_range(memory_address_hex_string):
+def test_for_hex_memory_address_in_range(memory_address_hex_string):
     is_memory_address_in_range = False
 
     memory_address_dec_value = hex_string_to_dec(memory_address_hex_string)
@@ -68,17 +69,16 @@ def create_indexed_address(memory_address_hex_string, REGISTER_DICT):
 # This function
 def execute_operation(REGISTER_DICT, MEMORY_MODEL):
     # PROGRAM COUNTER
-    # Verify that the Program Counter holds an in-range memory address
-    if not test_for_memory_address_in_range(REGISTER_DICT[REGISTER_PC].get_hex_string()):
-        print_error("PROGRAM COUNTER FAULT: Halting program execution",
-                    "PC REGISTER: " + REGISTER_DICT[REGISTER_PC].get_hex_string() + "\n")
-        return False
-
     pc_register_dec_value = hex_string_to_dec(REGISTER_DICT[REGISTER_PC].get_hex_string())
 
     # OPCODE
     # Look up operation code in memory and validate
-    opcode_hex_string = MEMORY_MODEL.get_byte(pc_register_dec_value)
+    try:
+        opcode_hex_string = MEMORY_MODEL.get_byte(pc_register_dec_value)
+    except SICMemoryModelError:
+        print_error("MEMORY FAULT: Halting program execution\n")
+        continue_execution = False
+        return continue_execution
 
     opcode_mnemonic = HEX_TO_OPCODE_DICT.get(opcode_hex_string)
 
@@ -86,11 +86,17 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
     if opcode_mnemonic is None:
         print_error("UNRECOGNIZED OPCODE FAULT: Halting program execution",
                     "OPCODE: " + opcode_hex_string + "\n")
-        return False
+        continue_execution = False
+        return continue_execution
 
     # MEMORY ADDRESS
     # Build the memory address
-    memory_address_hex_string = MEMORY_MODEL.get_bytes(pc_register_dec_value + 1, 2)
+    try:
+        memory_address_hex_string = MEMORY_MODEL.get_bytes(pc_register_dec_value + 1, 2)
+    except SICMemoryModelError:
+        print_error("MEMORY FAULT: Halting program execution\n")
+        continue_execution = False
+        return continue_execution
 
     # Test for indexed addressing
     is_indexed_addressing = test_for_indexed_addressing(memory_address_hex_string)
@@ -102,7 +108,14 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
 
     # Increment PC Register
     REGISTER_DICT[REGISTER_PC].set_hex_string(dec_to_hex_string(pc_register_dec_value + BYTES_IN_WORD))
+    # Verify that the Program Counter holds an in-range memory address
+    if not test_for_hex_memory_address_in_range(REGISTER_DICT[REGISTER_PC].get_hex_string()):
+        print_error("PROGRAM COUNTER FAULT: Halting program execution",
+                    "PC REGISTER: " + REGISTER_DICT[REGISTER_PC].get_hex_string() + "\n")
+        continue_execution = False
+        return continue_execution
 
+    # EXECUTE INSTRUCTION
     match opcode_mnemonic:
         case "ADD":
             # A <- (A) + (m..m+2)
@@ -110,7 +123,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             register_a_dec_value = sic_integer.hex_string_to_dec(register_a_hex_string)
 
             # Build the value held at the indicated memory location
-            word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             # Convert to decimal value and do the arithmetic
             word_dec_value = sic_integer.hex_string_to_dec(word_hex_string)
@@ -138,7 +156,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             register_a_dec_value = sic_integer.hex_string_to_dec(register_a_hex_string)
 
             # Build the value held at the indicated memory location
-            word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             # Convert to decimal value and do the arithmetic
             word_dec_value = sic_integer.hex_string_to_dec(word_hex_string)
@@ -183,7 +206,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
         case "LDA":
             # A <- (m..m+2)
             # Build the value held at the indicated memory location
-            word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             REGISTER_DICT[REGISTER_A].set_hex_string(word_hex_string)
 
@@ -199,7 +227,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
         case "LDX":
             # X <- (m..m+2)
             # Build the value held at the indicated memory location
-            word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             REGISTER_DICT[REGISTER_X].set_hex_string(word_hex_string)
 
@@ -211,7 +244,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             register_a_dec_value = sic_integer.hex_string_to_dec(register_a_hex_string)
 
             # Build the value held at the indicated memory location
-            word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             # Convert to decimal value and do the arithmetic
             word_dec_value = sic_integer.hex_string_to_dec(word_hex_string)
@@ -235,8 +273,17 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             pass
         case "RSUB":
             # PC <- (L)
-            # IMPLEMENT
-            pass
+            REGISTER_DICT[REGISTER_PC].set_hex_string(REGISTER_DICT[REGISTER_L].get_hex_string())
+
+            # Verify that the Program Counter holds an in-range memory address
+            if not test_for_hex_memory_address_in_range(REGISTER_DICT[REGISTER_PC].get_hex_string()):
+                print_error("PROGRAM COUNTER FAULT: Halting program execution",
+                            "PC REGISTER: " + REGISTER_DICT[REGISTER_PC].get_hex_string() + "\n")
+                continue_execution = False
+                return continue_execution
+
+            continue_execution = True
+            return continue_execution
         case "STA":
             # m..m+2 <- (A)
             register_a_hex_string = REGISTER_DICT[REGISTER_A].get_hex_string()
@@ -245,7 +292,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             start_index = 0
             end_index = 2
             while index < BYTES_IN_WORD:
-                MEMORY_MODEL.set_byte(memory_address_dec_value + index, register_a_hex_string[start_index:end_index])
+                try:
+                    MEMORY_MODEL.set_byte(memory_address_dec_value + index, register_a_hex_string[start_index:end_index])
+                except SICMemoryModelError:
+                    print_error("MEMORY FAULT: Halting program execution\n")
+                    continue_execution = False
+                    return continue_execution
                 index += 1
                 start_index += 2
                 end_index += 2
@@ -270,7 +322,12 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             register_a_dec_value = sic_integer.hex_string_to_dec(register_a_hex_string)
 
             # Build the value held at the indicated memory location
-            word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            try:
+                word_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, BYTES_IN_WORD)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             # Convert to decimal value and do the arithmetic
             word_dec_value = sic_integer.hex_string_to_dec(word_hex_string)
@@ -299,8 +356,13 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             # Compare the incremented value in register x
             # with value at the memory address and set the
             # Status Word register accordingly
-            memory_value_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, 3)
-            memory_value_dec_value = sic_integer.hex_string_to_dec(memory_value_hex_string)
+            try:
+                memory_value_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, 3)
+                memory_value_dec_value = sic_integer.hex_string_to_dec(memory_value_hex_string)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
 
             if register_x_dec_value < memory_value_dec_value:
                 REGISTER_DICT[REGISTER_SW].set_hex_string(SW_LESS_THAN)
