@@ -29,6 +29,8 @@ TIX m			2C			X <- (X) + 1; (X):(m..m+2)
 WD m			DC			Device specified by (m) <- (A)[rightmost byte]
 ==================================================
 XOS				FF			Exit to the operating system
+TXB m			FE			X <- (X) + 1; (X):(m..m+2)
+TXW m			FD			X <- (X) + 3; (X):(m..m+2 * 3)
 
 
 ASSEMBLER DIRECTIVES Page 44

@@ -604,3 +604,57 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             print_status("Program execution terminated normally\n")
             continue_execution = False
             return continue_execution
+        case "TXB":
+            # X <- (X) + 1: (X) : (m..m+2)
+            # Increment the value in the x register
+            register_x_dec_value = hex_string_to_dec(REGISTER_DICT[REGISTER_X].get_hex_string()) + 1
+            register_x_hex_string = dec_to_hex_string(register_x_dec_value)
+            REGISTER_DICT[REGISTER_X].set_hex_string(register_x_hex_string)
+
+            # Compare the incremented value in register x
+            # with value at the memory address and set the
+            # Status Word register accordingly
+            try:
+                memory_value_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, 3)
+                memory_value_dec_value = sic_integer.hex_string_to_dec(memory_value_hex_string)
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            if register_x_dec_value < memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_LESS_THAN)
+            elif register_x_dec_value == memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_EQUAL)
+            elif register_x_dec_value > memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_GREATER_THAN)
+
+            continue_execution = True
+            return continue_execution
+        case "TXW":
+            # X <- (X) + 3: (X) : (m..m+2 * 3)
+            # Increment the value in the x register
+            register_x_dec_value = hex_string_to_dec(REGISTER_DICT[REGISTER_X].get_hex_string()) + 3
+            register_x_hex_string = dec_to_hex_string(register_x_dec_value)
+            REGISTER_DICT[REGISTER_X].set_hex_string(register_x_hex_string)
+
+            # Compare the incremented value in register x
+            # with value at the memory address * 3 bytes (one word)
+            # and set the Status Word register accordingly
+            try:
+                memory_value_hex_string = MEMORY_MODEL.get_bytes(memory_address_dec_value, 3)
+                memory_value_dec_value = sic_integer.hex_string_to_dec(memory_value_hex_string) * 3
+            except SICMemoryModelError:
+                print_error("MEMORY FAULT: Halting program execution\n")
+                continue_execution = False
+                return continue_execution
+
+            if register_x_dec_value < memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_LESS_THAN)
+            elif register_x_dec_value == memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_EQUAL)
+            elif register_x_dec_value > memory_value_dec_value:
+                REGISTER_DICT[REGISTER_SW].set_hex_string(SW_GREATER_THAN)
+
+            continue_execution = True
+            return continue_execution
