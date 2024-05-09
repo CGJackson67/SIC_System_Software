@@ -528,7 +528,7 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             # Convert to decimal value and do the arithmetic
             word_dec_value = sic_integer.hex_string_to_dec(word_hex_string)
 
-            difference_dec_value = register_a_dec_value + word_dec_value
+            difference_dec_value = register_a_dec_value - word_dec_value
 
             if not MINIMUM_INTEGER <= difference_dec_value <= MAXIMUM_INTEGER:
                 print_error("INTEGER OUT OF RANGE FAULT: Halting program execution\n")
@@ -565,7 +565,7 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             continue_execution = True
             return continue_execution
         case "TIX":
-            # X <- (X) + 1: (X) : (m..m+2)
+            # X <- (X) + 1; (X) : (m..m+2)
             # Increment the value in the x register
             register_x_dec_value = hex_string_to_dec(REGISTER_DICT[REGISTER_X].get_hex_string()) + 1
             register_x_hex_string = dec_to_hex_string(register_x_dec_value)
@@ -604,9 +604,10 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
             print_status("Program execution terminated normally\n")
             continue_execution = False
             return continue_execution
-        case "TXB":
-            # X <- (X) + 1: (X) : (m..m+2)
+        case "TIXB":
+            # X <- (X) + 1; (X) : (m..m+2)
             # Increment the value in the x register
+            # NOTE: Function identical to TIX
             register_x_dec_value = hex_string_to_dec(REGISTER_DICT[REGISTER_X].get_hex_string()) + 1
             register_x_hex_string = dec_to_hex_string(register_x_dec_value)
             REGISTER_DICT[REGISTER_X].set_hex_string(register_x_hex_string)
@@ -631,8 +632,8 @@ def execute_operation(REGISTER_DICT, MEMORY_MODEL):
 
             continue_execution = True
             return continue_execution
-        case "TXW":
-            # X <- (X) + 3: (X) : (m..m+2 * 3)
+        case "TIXW":
+            # X <- (X) + 3; (X) : ((m..m+2) * 3)
             # Increment the value in the x register
             register_x_dec_value = hex_string_to_dec(REGISTER_DICT[REGISTER_X].get_hex_string()) + 3
             register_x_hex_string = dec_to_hex_string(register_x_dec_value)

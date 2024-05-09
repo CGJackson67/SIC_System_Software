@@ -1,3 +1,8 @@
+. Duplicate of ReadWrite.asm
+. from chapter 2 page 45
+. Copied to protect the state of ReadWrite.asm
+. Used as a clean base for the code
+. used to test the SIC Assembler
 .LABEL	OPCODE	OPERAND		REMARKS
 COPY	START	1000			COPY FILE FROM INPUT TO OUTPUT
 FIRST	STL		RETADR			SAVE RETURN ADDRESS

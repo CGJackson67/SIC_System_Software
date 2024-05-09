@@ -1,3 +1,7 @@
+. Based on example assembly code from
+. Chapter 2 page 111 exercise 2
+. Fixes problems in Sum.asm
+. Tests our custom opcode: XOS
 SUMMOD  START       4000
 FIRST   LDX         ZERO
         LDA         ONE
