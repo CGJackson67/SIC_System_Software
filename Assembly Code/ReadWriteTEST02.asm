@@ -1,3 +1,6 @@
+. Based on ReadWrite.asm
+. from chapter 2 page 45
+. Used to test the SIC Assembler
 .LABEL	OPCODE	OPERAND		REMARKS
 COPY	START	1000			COPY FILE FROM INPUT TO OUTPUT
 FIRST	STL		RETADR			SAVE RETURN ADDRESS

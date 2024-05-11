@@ -1,4 +1,5 @@
-from SIC_Utilities.sic_constants import NUMBER_OF_BITS_IN_AN_INTEGER, MINIMUM_INTEGER, MAXIMUM_INTEGER
+from SIC_Utilities.sic_constants import NUMBER_OF_BITS_IN_AN_INTEGER, MINIMUM_INTEGER, MAXIMUM_INTEGER, HEX_TO_BIN_DICT, \
+    BIN_TO_HEX_DICT
 
 
 class SICIntegerError(Exception):
@@ -57,23 +58,23 @@ def bin_string_to_dec(bin_value_string: str):
 
 
 # TEST BED
-try:
-    dec_value = bin_string_to_dec("101010101010101010101010")
-    print("dec_value 1:", dec_value)
-    dec_value = bin_string_to_dec("101010101010101010101111")
-    print("dec_value 2:", dec_value)
-    dec_value = bin_string_to_dec("000000001100000000111110")
-    print("dec_value 3:", dec_value)
-    dec_value = bin_string_to_dec("000000000000000000111001")
-    print("dec_value 4:", dec_value)
-    # dec_value = integer_bin_string_to_dec("101010100101010")
-    # print("dec_value 5:", dec_value)
-    # dec_value = integer_bin_string_to_dec("101010101XXX101010101010")
-    # print("dec_value 6:", dec_value)
-    # dec_value = integer_bin_string_to_dec("0000000001111000000000111001")
-    # print("dec_value 7:", dec_value)
-except SICIntegerError:
-    print("A Very Bad Error Has Occurred")
+# try:
+#     dec_value = bin_string_to_dec("101010101010101010101010")
+#     print("dec_value 1:", dec_value)
+#     dec_value = bin_string_to_dec("101010101010101010101111")
+#     print("dec_value 2:", dec_value)
+#     dec_value = bin_string_to_dec("000000001100000000111110")
+#     print("dec_value 3:", dec_value)
+#     dec_value = bin_string_to_dec("000000000000000000111001")
+#     print("dec_value 4:", dec_value)
+#     # dec_value = integer_bin_string_to_dec("101010100101010")
+#     # print("dec_value 5:", dec_value)
+#     # dec_value = integer_bin_string_to_dec("101010101XXX101010101010")
+#     # print("dec_value 6:", dec_value)
+#     # dec_value = integer_bin_string_to_dec("0000000001111000000000111001")
+#     # print("dec_value 7:", dec_value)
+# except SICIntegerError:
+#     print("A Very Bad Error Has Occurred")
 
 
 # Exceptions: ValueError, IntegerOutOfRangeError
@@ -133,15 +134,47 @@ def dec_to_bin_string(dec_value: int):
 
     return binary_number_string
 
+
+def hex_to_bin(hex_string):
+    bin_string = ""
+
+    for hex_digit in hex_string:
+        bin_string += HEX_TO_BIN_DICT[hex_digit]
+
+    return bin_string
+
+
+def bin_to_hex(bin_string):
+    hex_string = ""
+    # Register holds 24 bits
+    # range(START, STOP, STEP)
+    for index in range(0, 24, 4):
+        hex_string += BIN_TO_HEX_DICT[bin_string[index:index + 4]]
+
+    return hex_string
+
+
+def hex_string_to_dec(hex_string: str):
+    bin_string = hex_to_bin(hex_string)
+
+    return bin_string_to_dec(bin_string)
+
+
+def dec_to_hex_string(dec_value: int):
+    bin_string = dec_to_bin_string(dec_value)
+
+    return bin_to_hex(bin_string)
+
+
 # TEST BED
-try:
-    binary_value = dec_to_bin_string(-5592406)
-    print("binary_value:", binary_value)
-    binary_value = dec_to_bin_string(-5592401)
-    print("binary_value:", binary_value)
-    binary_value = dec_to_bin_string(49214)
-    print("binary_value:", binary_value)
-    binary_value = dec_to_bin_string(57)
-    print("binary_value:", binary_value)
-except SICIntegerError:
-    print("A Very Bad Error Has Occurred")
+# try:
+#     binary_value = dec_to_bin_string(-5592406)
+#     print("binary_value:", binary_value)
+#     binary_value = dec_to_bin_string(-5592401)
+#     print("binary_value:", binary_value)
+#     binary_value = dec_to_bin_string(49214)
+#     print("binary_value:", binary_value)
+#     binary_value = dec_to_bin_string(57)
+#     print("binary_value:", binary_value)
+# except SICIntegerError:
+#     print("A Very Bad Error Has Occurred")
