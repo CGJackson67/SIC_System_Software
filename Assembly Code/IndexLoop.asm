@@ -18,8 +18,8 @@ ADDLP   LDX         INDEX       LOAD INDEX VALUE INTO REGISTER X
 .
 INDEX   RESW        1           ONE-WORD VARIABLE FOR INDEX VALUE
 .                               ARRAY VARIABLES--100 WORDS EACH
-ALPHA   BYTE        C'24'
-        BYTE        C'YEEROO'
+ALPHA   WORD        24
+        WORD        7
 BETA    WORD        82
         WORD        53
 GAMMA   RESW        10
