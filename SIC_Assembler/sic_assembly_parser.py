@@ -129,7 +129,6 @@ def validate_start_operand(operand):
 #   3B) The character string must contain an even number of characters,
 #       and it must be 1 to 32 characters in length
 def validate_byte_operand(operand):
-    print(">>>", operand)
     if len(operand) < 4:
         raise SICAssemblyParserError("Invalid BYTE OPERAND")
 
